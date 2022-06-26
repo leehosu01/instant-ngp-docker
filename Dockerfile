@@ -81,8 +81,8 @@ RUN \
 RUN mkdir /include && ln -s /usr/include/boost /include/boost
 
 # build content path
-RUN mkdir ~/content
-WORKDIR ~/content
+RUN mkdir /content
+WORKDIR /content
 
 # ceres-solver & compile
 RUN \
