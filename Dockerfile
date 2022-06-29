@@ -32,7 +32,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     libffi-dev libssl-dev zlib1g-dev ${comment# python} \
     libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm ${comment# python} \
     libncurses5-dev libncursesw5-dev xz-utils tk-dev ${comment# python} \
-    ffmpeg libopenexr-dev libxi-dev ${comment# ngp} \
+    ffmpeg unzip libopenexr-dev libxi-dev ${comment# ngp} \
     libglfw3-dev libomp-dev libxinerama-dev libxcursor-dev ${comment# ngp} \
     xorg-dev libglu1-mesa-dev -y ${comment# tiny-cuda-nn} \
     && apt autoremove -y \
