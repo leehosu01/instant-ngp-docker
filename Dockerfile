@@ -47,6 +47,8 @@ RUN \
     && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30 \
     && update-alternatives --set c++ /usr/bin/g++
 
+WORKDIR /tmp
+
 # install python
 RUN \
     wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
@@ -57,32 +59,11 @@ RUN \
     && make install \
     && python3 -m pip install --upgrade pip setuptools wheel cmake \
     && echo "alias pip=pip3" >> ~/.bashrc \
-    && sh ~/.bashrc
-
-# # install conda
-# RUN \
-#     sh -c "echo 'export CONDA_DIR=/opt/conda' >> /etc/profile" \
-#     sh -c "echo 'export CONDA_ROOT=/opt/conda' >> /etc/profile" \
-#     sh -c "echo 'export PATH=$CONDA_DIR/bin:$PATH' >> /etc/profile" \
-#     source /etc/profile \
-#     CONDA_MIRROR=https://github.com/conda-forge/miniforge/releases/latest/download
-
-# # Miniforge installer
-# RUN \
-#     miniforge_arch=$(uname -m) && \
-#     miniforge_installer="Mambaforge-Linux-${miniforge_arch}.sh" && \
-#     wget --quiet "${CONDA_MIRROR}/${miniforge_installer}" && \
-#     /bin/bash "${miniforge_installer}" -f -b -p "${CONDA_DIR}" && \
-#     rm "${miniforge_installer}" && \
-#     /opt/conda/bin/conda init \
-#     source ~/.bashrc
+    && sh ~/.bashrc \
+    && rm -rf /tmp/*
 
 # boost path
 RUN mkdir /include && ln -s /usr/include/boost /include/boost
-
-# build content path
-RUN mkdir /content
-WORKDIR /content
 
 # ceres-solver & compile
 RUN \
@@ -93,7 +74,8 @@ RUN \
     && cd build \
     && cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF \
     && make -j \
-    && make install
+    && make install \
+    && rm -rf /tmp/*
 
 # colmap & compile
 RUN \
@@ -104,7 +86,12 @@ RUN \
     && cd build \
     && cmake .. ${comment# -DCUDA_NVCC_FLAGS="--std c++17" -DCMAKE_CXX_FLAGS="-std=c++17"} \
     && make -j ${comment# CXXFLAGS="-std=c++17"} \
-    && make install
+    && make install \
+    && rm -rf /tmp/*
+
+# build content path
+RUN mkdir /content
+WORKDIR /content
 
 # instant-ngp
 RUN \
@@ -162,9 +149,8 @@ RUN \
     mkdir $WORKSPACE_HOME && chmod a+rwx $WORKSPACE_HOME; \
     fi
 ENV HOME=$WORKSPACE_HOME
-RUN mv * $WORKSPACE_HOME
 WORKDIR $WORKSPACE_HOME
 ### Start Ainize Worksapce ###
 COPY External/ml-workspace/start.sh /scripts/start.sh
 RUN ["chmod", "+x", "/scripts/start.sh"]
-CMD "/scripts/start.sh"
+CMD sh -c "mv /content/instant-ngp/ \"$WORKSPACE_HOME\"; mv /content/execute.ipynb \"$WORKSPACE_HOME\"; /scripts/start.sh"
