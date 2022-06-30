@@ -113,3 +113,58 @@ RUN \
     && pip install -r requirements.txt \
     && cmake . -B build \
     && cmake --build build --config RelWithDebInfo -j `nproc`
+
+COPY execute.ipynb execute.ipynb
+
+# workspace requirements
+COPY External/ml-workspace/scripts/clean-layer.sh  /usr/bin/clean-layer.sh
+COPY External/ml-workspace/scripts/fix-permissions.sh  /usr/bin/fix-permissions.sh
+
+# script that we will use to correct permissions after running certain commands
+RUN \
+    chmod a+rwx /usr/bin/clean-layer.sh && \
+    chmod a+rwx /usr/bin/fix-permissions.sh
+
+COPY External/ml-workspace/branding/logo.png /tmp/logo.png
+COPY External/ml-workspace/branding/favicon.ico /tmp/favicon.ico
+
+# Install Python package from environment.yml
+RUN pip install jupyter
+
+
+RUN /bin/bash -c 'cp /tmp/logo.png $(python3 -c "import sys; print(sys.path[-1])")/notebook/static/base/images/logo.png'
+RUN /bin/bash -c 'cp /tmp/favicon.ico $(python3 -c "import sys; print(sys.path[-1])")/notebook/static/base/images/favicon.ico'
+RUN /bin/bash -c 'cp /tmp/favicon.ico $(python3 -c "import sys; print(sys.path[-1])")/notebook/static/favicon.ico'
+
+## Install Visual Studio Code Server
+RUN curl -fsSL https://code-server.dev/install.sh | sh && clean-layer.sh
+
+## Install ttyd. (Not recommended to edit)
+RUN \
+    wget https://github.com/tsl0922/ttyd/archive/refs/tags/1.6.2.zip \
+    && unzip 1.6.2.zip
+RUN apt update && apt -y install libuv1-dev libjson-c-dev libwebsockets-dev -y
+
+RUN \
+    cd ttyd-1.6.2 \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+    && make \
+    && make install
+
+# Make folders
+ENV WORKSPACE_HOME="/workspace"
+RUN \
+    if [ -e $WORKSPACE_HOME ] ; then \
+    chmod a+rwx $WORKSPACE_HOME; \
+    else \
+    mkdir $WORKSPACE_HOME && chmod a+rwx $WORKSPACE_HOME; \
+    fi
+ENV HOME=$WORKSPACE_HOME
+RUN mv * $WORKSPACE_HOME
+WORKDIR $WORKSPACE_HOME
+### Start Ainize Worksapce ###
+COPY External/ml-workspace/start.sh /scripts/start.sh
+RUN ["chmod", "+x", "/scripts/start.sh"]
+CMD "/scripts/start.sh"

@@ -1,0 +1,4 @@
+[submodule "External/ml-workspace"]
+	path = External/ml-workspace
+	url = https://github.com/ainize-workspace-collections/ml-workspace
+	branch = 2022.01
