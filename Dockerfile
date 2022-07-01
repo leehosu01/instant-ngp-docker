@@ -101,8 +101,6 @@ RUN \
     && cmake . -B build \
     && cmake --build build --config RelWithDebInfo -j `nproc`
 
-COPY execute.ipynb execute.ipynb
-
 # workspace requirements
 COPY External/ml-workspace/scripts/clean-layer.sh  /usr/bin/clean-layer.sh
 COPY External/ml-workspace/scripts/fix-permissions.sh  /usr/bin/fix-permissions.sh
@@ -139,6 +137,9 @@ RUN \
     && cmake .. \
     && make \
     && make install
+
+# notebook file
+COPY execute.ipynb execute.ipynb
 
 # Make folders
 ENV WORKSPACE_HOME="/workspace"
